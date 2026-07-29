@@ -1,0 +1,10 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agent-reliability-contracts"
+version = "0.1.0"
+description = "Shared typed contracts for platform services"
+requires-python = ">=3.12"
+dependencies = []

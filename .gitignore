@@ -1,0 +1,33 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+dist/
+*.egg-info/
+
+# Node.js / Next.js
+node_modules/
+.pnpm-store/
+.next/
+out/
+*.tsbuildinfo
+
+# Local runtime data
+.data/
+
+# Editors and operating systems
+.DS_Store
+.idea/
+.vscode/
+
+# Infrastructure tooling
+.terraform/
+*.tfstate
+*.tfstate.*

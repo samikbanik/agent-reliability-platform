@@ -1,0 +1,9 @@
+[project]
+name = "agent-reliability-worker-synthesis"
+version = "0.1.0"
+description = "Worker that turns research artifacts into reports"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv]
+package = false

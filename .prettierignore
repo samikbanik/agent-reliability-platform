@@ -1,0 +1,6 @@
+.next
+.pnpm-store
+.venv
+node_modules
+pnpm-lock.yaml
+uv.lock

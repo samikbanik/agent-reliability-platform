@@ -1,0 +1,9 @@
+[project]
+name = "agent-reliability-worker-research"
+version = "0.1.0"
+description = "Worker that gathers and stores research artifacts"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv]
+package = false
