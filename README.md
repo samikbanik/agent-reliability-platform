@@ -93,18 +93,22 @@ Do not start with every advanced component. The strongest story is a stable, wor
 
 ## Local Development
 
-Phase 0 establishes the monorepo and runnable service placeholders. Install Node.js 20+,
-pnpm 10.4.1, Python 3.12, uv, and Make, then run:
+Phase 1 provides the first end-to-end local MVP. Install Node.js 20+, pnpm 10.4.1,
+Python 3.12, uv, Make, and Docker, then run:
 
 ```bash
 corepack enable
 make bootstrap
 make check
+make up
 ```
 
-Use `make help` to see the available development commands. See
-[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for workspace conventions and service
-placeholder commands. Docker and backing services are intentionally deferred to Phase 1.
+Open [http://localhost:3000](http://localhost:3000), submit a research goal, and watch the
+job move through planner → research → synthesis → verifier. Use `make e2e` for an API-level
+smoke test and `make logs` to inspect service output.
+
+See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) and [ops/compose/README.md](ops/compose/README.md)
+for workspace conventions and Compose details.
 
 ## Success Criteria
 

@@ -3,7 +3,14 @@ name = "agent-reliability-worker-planner"
 version = "0.1.0"
 description = "Worker that converts research goals into executable plans"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+  "agent-reliability-common",
+  "agent-reliability-contracts",
+]
 
 [tool.uv]
 package = false
+
+[tool.uv.sources]
+agent-reliability-common = { workspace = true }
+agent-reliability-contracts = { workspace = true }

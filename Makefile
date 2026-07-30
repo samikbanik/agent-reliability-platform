@@ -1,6 +1,8 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help bootstrap install env lint format format-check typecheck test check pre-commit web api orchestrator
+COMPOSE := docker compose --env-file .env -f ops/compose/docker-compose.yml
+
+.PHONY: help bootstrap install env lint format format-check typecheck test check pre-commit web api orchestrator up down logs e2e
 
 help: ## Show available development commands
 	@awk 'BEGIN {FS = ":.*## "; printf "Usage: make <target>\n\n"} /^[a-zA-Z_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -30,18 +32,30 @@ typecheck: ## Type-check the web application
 	pnpm typecheck
 
 test: ## Run the Python test suite
-	uv run pytest
+	PYTHONPATH=apps/orchestrator uv run pytest
 
 check: lint format-check typecheck test ## Run all local quality checks
 
 pre-commit: ## Install the repository's Git pre-commit hooks
 	uv run pre-commit install
 
-web: ## Run the web placeholder
+web: ## Run the web application
 	pnpm --filter @agent-reliability/web dev
 
-api: ## Run the API placeholder
+api: ## Run the API service
 	uv run --package agent-reliability-api uvicorn main:app --app-dir apps/api --reload --port 8000
 
-orchestrator: ## Run the orchestrator placeholder
+orchestrator: ## Run the orchestrator service
 	uv run --package agent-reliability-orchestrator uvicorn main:app --app-dir apps/orchestrator --reload --port 8001
+
+up: env ## Build and start the Docker Compose stack
+	$(COMPOSE) up --build -d
+
+down: ## Stop the Docker Compose stack
+	$(COMPOSE) down
+
+logs: ## Follow Docker Compose logs
+	$(COMPOSE) logs -f
+
+e2e: ## Submit a job through the API and wait for completion
+	@./scripts/e2e-smoke.sh

@@ -2,6 +2,14 @@
 .env
 .env.*
 !.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+service-account*.json
+secrets/
+.secrets/
 
 # Python
 __pycache__/
@@ -11,6 +19,10 @@ __pycache__/
 .venv/
 dist/
 *.egg-info/
+.coverage
+htmlcov/
+coverage.xml
+.mypy_cache/
 
 # Node.js / Next.js
 node_modules/
@@ -21,6 +33,7 @@ out/
 
 # Local runtime data
 .data/
+*.log
 
 # Editors and operating systems
 .DS_Store
@@ -31,3 +44,5 @@ out/
 .terraform/
 *.tfstate
 *.tfstate.*
+crash.log
+crash.*.log

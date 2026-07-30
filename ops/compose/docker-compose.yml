@@ -1,0 +1,155 @@
+name: agent-reliability
+
+x-python-service: &python-service
+  build:
+    context: ../..
+    dockerfile: ops/compose/Dockerfile.python
+  environment:
+    APP_ENV: ${APP_ENV:-development}
+    LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-agent_reliability}:${POSTGRES_PASSWORD:-agent_reliability}@postgres:5432/${POSTGRES_DB:-agent_reliability}
+    REDIS_URL: redis://redis:6379/0
+    RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER:-agent_reliability}:${RABBITMQ_DEFAULT_PASS:-agent_reliability}@rabbitmq:5672/
+    ARTIFACT_STORAGE_PATH: /data/artifacts
+    ORCHESTRATOR_URL: http://orchestrator:8001
+  volumes:
+    - artifact-data:/data/artifacts
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    rabbitmq:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-agent_reliability}
+      POSTGRES_USER: ${POSTGRES_USER:-agent_reliability}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-agent_reliability}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-agent_reliability}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-agent_reliability}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  api:
+    <<: *python-service
+    command:
+      [
+        "uvicorn",
+        "main:app",
+        "--app-dir",
+        "apps/api",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+      ]
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  orchestrator:
+    <<: *python-service
+    command:
+      [
+        "uvicorn",
+        "main:app",
+        "--app-dir",
+        "apps/orchestrator",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8001",
+      ]
+    ports:
+      - "8001:8001"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/healthz')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  worker-planner:
+    <<: *python-service
+    command: ["python", "apps/workers/planner/main.py"]
+
+  worker-research:
+    <<: *python-service
+    command: ["python", "apps/workers/research/main.py"]
+
+  worker-synthesis:
+    <<: *python-service
+    command: ["python", "apps/workers/synthesis/main.py"]
+
+  worker-verifier:
+    <<: *python-service
+    command: ["python", "apps/workers/verifier/main.py"]
+
+  web:
+    build:
+      context: ../..
+      dockerfile: ops/compose/Dockerfile.web
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    environment:
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  artifact-data:
